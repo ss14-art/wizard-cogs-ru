@@ -44,31 +44,23 @@ class TriggerButtons(discord.ui.View):
         await self.modal.wait()
         self.stop()
 
-class RemoveTriggerModal(discord.ui.Modal, title="Удалить автоответ"):
-    trigger = discord.ui.TextInput(
-        label="Триггер (введите точное название)",
-        placeholder=r"например: .*tetris.*",
-        required=True,
-    )
+class RemoveTriggerSelect(discord.ui.Select):
+    def __init__(self, triggers: Dict[str, Dict[str, str]]):
+        options = [
+            discord.SelectOption(label=f"{trigger} → {data['response'][:50]}...", value=trigger)
+            for trigger, data in triggers.items()
+        ]
+        super().__init__(placeholder="Выберите автоответ для удаления:", options=options)
 
-    async def on_submit(self, interaction: discord.Interaction):
-        await interaction.response.send_message("Автоответ удалён!", ephemeral=True)
+    async def callback(self, interaction: discord.Interaction):
+        await interaction.response.send_message(f"Удаляю автоответ: `{self.values[0]}`", ephemeral=True)
         self.stop()
 
-class RemoveTriggerButtons(discord.ui.View):
-    def __init__(self, member: discord.Member):
+class RemoveTriggerView(discord.ui.View):
+    def __init__(self, triggers: Dict[str, Dict[str, str]]):
         super().__init__()
-        self.member = member
-        self.modal = None
-
-    @discord.ui.button(label="Удалить", style=discord.ButtonStyle.red)
-    async def remove_trigger(self, interaction: discord.Interaction, button: discord.ui.Button):
-        if interaction.user != self.member:
-            return await interaction.response.send_message("Вы не можете использовать эту кнопку.", ephemeral=True)
-        self.modal = RemoveTriggerModal()
-        await interaction.response.send_modal(self.modal)
-        await self.modal.wait()
-        self.stop()
+        self.select = RemoveTriggerSelect(triggers)
+        self.add_item(self.select)
 
 class Responder(commands.Cog):
     def __init__(self, bot):
@@ -104,17 +96,16 @@ class Responder(commands.Cog):
         triggers = await self.config.guild(ctx.guild).triggers()
         if not triggers:
             return await ctx.send("Нет добавленных автоответов.")
-        view = RemoveTriggerButtons(ctx.author)
-        await ctx.send("Нажмите кнопку, чтобы удалить автоответ.", view=view)
+
+        view = RemoveTriggerView(triggers)
+        await ctx.send("Выберите автоответ для удаления:", view=view)
         await view.wait()
-        if view.modal:
-            trigger = view.modal.trigger.value
+
+        if view.select.values:
+            trigger = view.select.values[0]
             async with self.config.guild(ctx.guild).triggers() as triggers:
-                if trigger in triggers:
-                    del triggers[trigger]
-                    await ctx.send(f"Триггер `{trigger}` удалён!")
-                else:
-                    await ctx.send(f"Триггер `{trigger}` не найден.")
+                del triggers[trigger]
+            await ctx.send(f"Автоответ `{trigger}` удалён!")
 
     @autoresponder.command(name="list")
     async def list_triggers(self, ctx: commands.Context):
@@ -174,22 +165,8 @@ class Responder(commands.Cog):
 - `\d{3}` — ровно три цифры подряд.
 - `[A-Za-z]+` — одна или более латинских букв.
 
-### Флаги:
-- `re.IGNORECASE` — игнорировать регистр.
-- `re.MULTILINE` — учитывать начало/конец строки для каждой строки в тексте.
-
-### Пример использования в Python:
-```python
-import re
-text = "Hello, world!"
-match = re.search(r"world", text)
-if match:
-    print("Найдено:", match.group())
-```
-
 **Дополнительно:**
 - Для тестирования регулярных выражений можно использовать онлайн-сервисы, например, [regex101.com](https://regex101.com/).
-- В Discord-ботах регулярные выражения часто используются для сопоставления сообщений с триггерами.
 """
         await ctx.send(regex_help)
 
