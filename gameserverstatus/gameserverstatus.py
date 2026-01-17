@@ -34,7 +34,6 @@ class SS14ServerStatus(discord.ui.LayoutView):
         name: str,
         player_count: str,
         status: str,
-        gamemap: str,
         preset: str,
         round_id: str,
         color: discord.Color,
@@ -45,7 +44,7 @@ class SS14ServerStatus(discord.ui.LayoutView):
             discord.ui.TextDisplay(content=f"**{name}**"),
             discord.ui.Separator(visible=True, spacing=discord.SeparatorSpacing.small),
             discord.ui.TextDisplay(
-                content=f"**Игроки:** {player_count}\n**Статус:** {status}\n**Карта:** {gamemap}\n**Пресет:** {preset}"
+                content=f"**Игроки:** {player_count}\n**Статус:** {status}\n**Пресет:** {preset}"
             ),
             accent_color=color,
         )
@@ -72,8 +71,8 @@ class GameServerStatus(commands.Cog):
 
     @commands.Cog.listener()
     async def on_guild_remove(self, guild: discord.Guild) -> None:
-        # Удаляем наблюдателей
-        await self.config.guild(guild).watches.set({})
+        # Удаляем наблюдателей при удалении гильдии
+        await self.config.guild(guild).watches.clear()
 
     async def cog_unload(self) -> None:
         await self.session.close()
@@ -150,7 +149,6 @@ class GameServerStatus(commands.Cog):
                 "Такого сервера не существует!", ephemeral=True
             )
 
-        # Отложим ответ, чтобы дождаться получения HTTP-статуса
         await interaction.response.defer(thinking=True, ephemeral=visible_command)
         try:
             fetched_data = await self.get_ss14_server_status(game_server_data)
@@ -182,12 +180,12 @@ class GameServerStatus(commands.Cog):
     ) -> List[app_commands.Choice[str]]:
         server_names = list(
             (await self.config.guild(interaction.guild).servers()).keys()
-        )  # JSON практически кэширован как memcached
+        )
         return [
             app_commands.Choice(name=server.capitalize(), value=server)
             for server in server_names
             if current.lower() in server.lower()
-        ][:25]  # Лимит Discord на Choice - 25, убедимся, что не превышаем его
+        ][:25]
 
     async def show_server_list(self, ctx: commands.Context) -> None:
         servers = await self.config.guild(ctx.guild).servers()
@@ -209,7 +207,7 @@ class GameServerStatus(commands.Cog):
                 colour=await ctx.embed_colour(),
             )
             embed.set_footer(
-                text="Страница {num}/{total}".format(num=idx, total=len(pages))
+                text=f"Страница {idx}/{len(pages)}"
             )
             embed_pages.append(embed)
         await menus.menu(ctx, embed_pages, menus.DEFAULT_CONTROLS)
@@ -217,26 +215,26 @@ class GameServerStatus(commands.Cog):
     async def get_ss14_server_status(self, config: Dict[str, str]) -> Dict[str, str]:
         """Получает и возвращает конечную точку статуса с сервера SS14."""
         cfgurl = config["address"]
-        longname = config.get("name")  # noqa: F841
         addr = get_ss14_status_url(cfgurl)
-        log.debug("SS14 addr is {}".format(addr))
+        log.debug("SS14 addr is %s", addr)
 
         try:
             log.debug("Начинаю запрос")
-            async with self.session.get(addr + "/status") as resp:
+            async with self.session.get(addr + "/status", timeout=10) as resp:
+                if resp.status != 200:
+                    raise StatusFetchError
                 log.debug("Получен ответ.")
-                json = await resp.json()
-        except:
+                json_data = await resp.json()
+        except (aiohttp.ClientError, asyncio.TimeoutError):
             raise StatusFetchError
 
-        count = json.get("players", "?")
-        count_max = json.get("soft_max_players", "?")
-        name = json.get("name", "?")
-        round_id = json.get("round_id", "?")
-        gamemap = json.get("map", "?")
-        preset = json.get("preset", "?")
-        run_level = json.get("run_level")
-        round_start_time = json.get("round_start_time")
+        count = json_data.get("players", "?")
+        count_max = json_data.get("soft_max_players", "?")
+        name = json_data.get("name", "?")
+        round_id = json_data.get("round_id", "?")
+        preset = json_data.get("preset", "?")
+        run_level = json_data.get("run_level")
+        round_start_time = json_data.get("round_start_time")
 
         player_count = f"{count}/{count_max}"
         if run_level == 1 and round_start_time is not None:
@@ -250,7 +248,6 @@ class GameServerStatus(commands.Cog):
             "name": name,
             "player_count": player_count,
             "status": status,
-            "gamemap": gamemap,
             "preset": preset,
             "round_id": round_id,
         }
@@ -264,7 +261,6 @@ class GameServerStatus(commands.Cog):
         """
         pass
 
-    # -- Группа команд для добавления и удаления серверов
     @statuscfg.group()
     async def addserver(self, ctx: commands.Context) -> None:
         """
@@ -274,7 +270,7 @@ class GameServerStatus(commands.Cog):
 
     @addserver.command(name="ss14")
     async def addserver_ss14(
-        self, ctx: commands.Context, name: str, address: str, longname: Optional[str]
+        self, ctx: commands.Context, name: str, address: str, longname: Optional[str] = None
     ) -> None:
         """
         Добавляет сервер типа SS14.
@@ -313,12 +309,7 @@ class GameServerStatus(commands.Cog):
             del cur_servers[name]
 
         async with self.config.guild(ctx.guild).watches() as watches:
-            for w in watches:
-                if w["server"] != name:
-                    continue
-
-                watches.remove(w)
-                await self.remove_watch_message(ctx.guild, w)
+            watches[:] = [w for w in watches if w["server"] != name]
 
         await ctx.tick()
 
@@ -350,7 +341,7 @@ class GameServerStatus(commands.Cog):
             msg = await channel.send(view=component_view)
             watches.append({"message": msg.id, "server": name, "channel": channel.id})
 
-            return await ctx.send("Наблюдение за сервером успешно добавлено.")
+            await ctx.send("Наблюдение за сервером успешно добавлено.")
 
     @statuscfg.command()
     async def remwatch(
@@ -364,12 +355,12 @@ class GameServerStatus(commands.Cog):
         """
         name = name.lower()
         async with self.config.guild(ctx.guild).watches() as watches:
-            for w in watches:
-                if w["server"] != name or w["channel"] != channel.id:
-                    continue
-
-                watches.remove(w)
-                await self.remove_watch_message(ctx.guild, w)
+            initial_len = len(watches)
+            watches[:] = [w for w in watches if not (w["server"] == name and w["channel"] == channel.id)]
+            
+            if len(watches) == initial_len:
+                await ctx.send("Наблюдение не найдено.")
+                return
 
         await ctx.tick()
 
@@ -377,12 +368,14 @@ class GameServerStatus(commands.Cog):
         self, guild: discord.Guild, watch_data: Dict[str, Any]
     ) -> None:
         channel = guild.get_channel(watch_data["channel"])
-        try:
-            message = await channel.fetch_message(watch_data["message"])
-            await message.delete()
-        except Exception as e:
-            log.exception(e)
-            pass
+        if channel:
+            try:
+                message = await channel.fetch_message(watch_data["message"])
+                await message.delete()
+            except discord.NotFound:
+                pass
+            except Exception as e:
+                log.exception("Ошибка при удалении сообщения наблюдения", exc_info=e)
 
     @statuscfg.command()
     async def watches(self, ctx: commands.Context) -> None:
@@ -396,10 +389,8 @@ class GameServerStatus(commands.Cog):
             return
 
         content = "\n".join(
-            map(
-                lambda w: f"<#{w['channel']}> - {w['server']} - [сообщение](https://discord.com/channels/{ctx.guild.id}/{w['channel']}/{w['message']})",
-                watches,
-            )
+            f"<#{w['channel']}> - {w['server']} - [сообщение](https://discord.com/channels/{ctx.guild.id}/{w['channel']}/{w['message']})"
+            for w in watches
         )
 
         pages = list(pagify(content, page_length=1024))
@@ -411,7 +402,7 @@ class GameServerStatus(commands.Cog):
                 colour=await ctx.embed_colour(),
             )
             embed.set_footer(
-                text="Страница {num}/{total}".format(num=idx, total=len(pages))
+                text=f"Страница {idx}/{len(pages)}"
             )
             embed_pages.append(embed)
         await menus.menu(ctx, embed_pages, menus.DEFAULT_CONTROLS)
@@ -421,45 +412,47 @@ class GameServerStatus(commands.Cog):
         log.debug("Запуск цикла наблюдателя.")
         try:
             for guild_id, data in (await self.config.all_guilds()).items():
-                for watch in data["watches"]:
+                guild = self.bot.get_guild(guild_id)
+                if not guild:
+                    continue
+
+                for watch in data.get("watches", []):
                     msg_id = watch["message"]
                     ch_id = watch["channel"]
                     server = watch["server"]
 
                     try:
-                        channel = self.bot.get_channel(ch_id)
+                        channel = guild.get_channel(ch_id)
+                        if not channel:
+                            continue
                         msg = await channel.fetch_message(msg_id)
                     except discord.NotFound:
-                        # Сообщение исчезло, очистим конфиг.
-                        async with self.config.guild_from_id(
-                            guild_id
-                        ).watches() as w_config:
-                            remove_list_elems(
-                                w_config, lambda x: x["message"] == msg_id
-                            )
+                        async with self.config.guild(guild).watches() as w_config:
+                            w_config[:] = [w for w in w_config if w["message"] != msg_id]
+                        continue
+                    except discord.Forbidden:
+                        continue
+
+                    server_data = data.get("servers", {}).get(server)
+                    if not server_data:
                         continue
 
                     try:
-                        fetched_data = await self.get_ss14_server_status(
-                            data["servers"][server]
-                        )
+                        fetched_data = await self.get_ss14_server_status(server_data)
                     except StatusFetchError:
-                        continue  # Завершаем функцию раньше, просто потому что не можем получить статус
+                        continue
+
                     view = SS14ServerStatus(
                         **fetched_data, color=await self.bot.get_embed_color(msg)
                     )
-                    await msg.edit(
-                        content="", embed=None, view=view
-                    )  # Обеспечиваем обратную совместимость со старыми наблюдениями
-        except discord.errors.HTTPException as e:
-            log.exception(
-                "Произошла ошибка при попытке выполнить цикл gameserverstatus.",
-                exc_info=e,
-            )
+                    
+                    try:
+                        await msg.edit(content="", embed=None, view=view)
+                    except discord.HTTPException:
+                        pass
+                        
         except Exception as e:
-            log.exception(
-                "Произошла непредвиденная ошибка в цикле printer.", exc_info=e
-            )
+            log.exception("Произошла ошибка в цикле printer.", exc_info=e)
 
     @statuscfg.command()
     async def slashcommandvisible(self, ctx: commands.Context, enabled: bool = None):
@@ -468,15 +461,14 @@ class GameServerStatus(commands.Cog):
         """
         if enabled is None:
             setting = await self.config.guild(ctx.guild).slashcommandvisible()
-            if setting is True:
+            if setting:
                 await ctx.send("Слеш-команды статуса в настоящее время видны всем в канале, где они запущены.")
-                return
             else:
                 await ctx.send("Слеш-команды статуса в настоящее время видны только отправителю.")
-                return
+            return
+            
         await self.config.guild(ctx.guild).slashcommandvisible.set(enabled)
         await ctx.tick()
-
 
     @printer.before_loop
     async def before_loop(self):
@@ -518,7 +510,6 @@ def legacy_embed(
     name: str,
     player_count: str,
     status: str,
-    gamemap: str,
     preset: str,
     round_id: str,
     color: discord.Color,
@@ -527,7 +518,6 @@ def legacy_embed(
     embed.add_field(name="Игроков онлайн", value=player_count)
     embed.add_field(name="Статус", value=status)
     embed.add_field(name="ID раунда", value=round_id)
-    embed.add_field(name="Карта", value=gamemap)
     embed.add_field(name="Пресет", value=preset)
     return embed
 
@@ -535,9 +525,6 @@ def legacy_embed(
 T = TypeVar("T")
 
 
-# .NET List<T>.RemoveAll(Predicate<T>)
-# O(n^2) worst case (.NET's is O(n))
 def remove_list_elems(itter_list: List[T], pred: Callable[[T], bool]) -> None:
-    for i in list(filter(pred, itter_list)):
-        itter_list.remove(i)
-        
+    itter_list[:] = [item for item in itter_list if not pred(item)]
+    
