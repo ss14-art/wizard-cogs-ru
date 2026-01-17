@@ -1,5 +1,4 @@
-from .responder import responder
+from .responder import Responder
 
-
-async def setup(bot) -> None:
-    await bot.add_cog(responder(bot))
+async def setup(bot):
+    await bot.add_cog(Responder(bot))
