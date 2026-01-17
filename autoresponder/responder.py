@@ -1,5 +1,6 @@
 import re
 import discord
+import random
 from redbot.core import commands, Config
 from redbot.core.utils.views import ConfirmView
 from redbot.core.utils import menus
@@ -118,11 +119,9 @@ class Responder(commands.Cog):
     @autoresponder.command(name="list")
     async def list_triggers(self, ctx: commands.Context):
         """Показать все автоответы (включая встроенные)."""
-        # Динамические автоответы
         dynamic_triggers = await self.config.guild(ctx.guild).triggers()
         dynamic_content = "\n".join(f"`{t}` → {d['response']}" for t, d in dynamic_triggers.items())
 
-        # Встроенные автоответы
         static_triggers = {
             r".*tetris.*": "*Nanotrasen Block Game™",
             r"\S\s+(?:when|whence)[\s*?.!)]*$": "When You Code It. / Никогда.",
@@ -130,7 +129,6 @@ class Responder(commands.Cog):
         }
         static_content = "\n".join(f"`{t}` → {r}" for t, r in static_triggers.items())
 
-        # Объединение результатов
         content = "**Динамические автоответы:**\n"
         content += dynamic_content if dynamic_content else "Нет динамических автоответов.\n"
         content += "\n**Встроенные автоответы:**\n"
@@ -147,6 +145,53 @@ class Responder(commands.Cog):
             embed.set_footer(text=f"Страница {idx}/{len(pages)}")
             embed_pages.append(embed)
         await menus.menu(ctx, embed_pages, menus.DEFAULT_CONTROLS)
+
+    @commands.command()
+    async def regexhelp(self, ctx: commands.Context):
+        """Помощь по регулярным выражениям."""
+        regex_help = """
+**Регулярные выражения (regex) — краткая справка**
+
+Регулярные выражения используются для поиска и сопоставления текста по шаблону.
+
+### Основные символы и конструкции:
+- `.` — любой символ, кроме новой строки.
+- `*` — ноль или более повторений предыдущего символа.
+- `+` — одно или более повторений предыдущего символа.
+- `?` — ноль или одно повторение предыдущего символа.
+- `\d` — любая цифра.
+- `\w` — любая буква, цифра или подчёркивание.
+- `\s` — любой пробельный символ (пробел, табуляция, новая строка).
+- `[abc]` — любой из символов `a`, `b` или `c`.
+- `(a|b)` — либо `a`, либо `b`.
+- `^` — начало строки.
+- `$` — конец строки.
+- `\b` — граница слова.
+
+### Примеры:
+- `.*tetris.*` — любая строка, содержащая слово `tetris`.
+- `^\s*when\s*$` — строка, содержащая только слово `when` (с возможными пробелами).
+- `\d{3}` — ровно три цифры подряд.
+- `[A-Za-z]+` — одна или более латинских букв.
+
+### Флаги:
+- `re.IGNORECASE` — игнорировать регистр.
+- `re.MULTILINE` — учитывать начало/конец строки для каждой строки в тексте.
+
+### Пример использования в Python:
+```python
+import re
+text = "Hello, world!"
+match = re.search(r"world", text)
+if match:
+    print("Найдено:", match.group())
+```
+
+**Дополнительно:**
+- Для тестирования регулярных выражений можно использовать онлайн-сервисы, например, [regex101.com](https://regex101.com/).
+- В Discord-ботах регулярные выражения часто используются для сопоставления сообщений с триггерами.
+"""
+        await ctx.send(regex_help)
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
