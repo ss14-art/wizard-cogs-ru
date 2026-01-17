@@ -1,9 +1,9 @@
 {
-    "author" : ["Space Wizards"],
-    "install_msg" : "If you have the permissions, you can just use the echo command.",
-    "name" : "Echo",
-    "short" : "This just copies what you say.",
-    "description" : "This just copies what you say. And lets you edit it",
-    "tags" : ["Echo"],
-    "hidden" : true
+    "author": ["Space Wizards"],
+    "install_msg": "Если у вас есть права, вы можете просто использовать команду echo.",
+    "name": "Echo",
+    "short": "Просто повторяет то, что вы говорите.",
+    "description": "Просто повторяет то, что вы говорите. И позволяет вам редактировать это.",
+    "tags": ["Echo"],
+    "hidden": true
 }

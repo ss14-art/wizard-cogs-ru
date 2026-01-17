@@ -12,25 +12,25 @@ class Echo(commands.Cog):
     @checks.admin()
     async def adminmsg(self, ctx: commands.Context) -> None:
         """
-        Commands for managing and creating admin messages.
+        Команды для управления и создания административных сообщений.
         """
         pass
 
     @adminmsg.command()
     async def create(self, ctx: commands.Context, chan: TextChannel) -> None:
         """
-        Create an admin message in the specified channel.
-        The contents of the message are everything except the first line of the message invoking the command, and are copied verbatim.
+        Создать административное сообщение в указанном канале.
+        Содержимое сообщения — это всё, кроме первой строки сообщения, вызвавшего команду, и копируется дословно.
         """
         msg = "\n".join(ctx.message.content.split("\n")[1:])
         if not msg:
-            await ctx.reply("Message is empty! Put it on a new line!")
+            await ctx.reply("Сообщение пустое! Поместите его на новую строку!")
             return
 
         try:
             await chan.send(msg)
         except discord.Forbidden:
-            await ctx.reply("I do not have permission to send there!")
+            await ctx.reply("У меня нет разрешения отправлять сообщения туда!")
             return
 
         await ctx.tick()
@@ -38,16 +38,16 @@ class Echo(commands.Cog):
     @adminmsg.command()
     async def edit(self, ctx: commands.Context, editMessage: Message) -> None:
         """
-        Edits the contents of a message sent by the bot.
-        The contents of the message are everything except the first line of the message invoking the command, and are copied verbatim.
+        Редактирует содержимое сообщения, отправленного ботом.
+        Содержимое сообщения — это всё, кроме первой строки сообщения, вызвавшего команду, и копируется дословно.
         """
         msg = "\n".join(ctx.message.content.split("\n")[1:])
         if not msg:
-            await ctx.reply("Message is empty! Put it on a new line!")
+            await ctx.reply("Сообщение пустое! Поместите его на новую строку!")
             return
 
         if editMessage.author != self.bot.user:
-            await ctx.reply("I didn't send that message!")
+            await ctx.reply("Я не отправлял это сообщение!")
             return
 
         await editMessage.edit(content=msg)
@@ -56,15 +56,15 @@ class Echo(commands.Cog):
     @adminmsg.command()
     async def raw(self, ctx: commands.Context, message: Message) -> None:
         """
-        Returns the raw contents of the message, escaping emoji, mentions and channels.
-        Useful for editing existing messages.
+        Возвращает исходное содержимое сообщения, экранируя эмодзи, упоминания и каналы.
+        Полезно для редактирования существующих сообщений.
         """
 
         if message.author != self.bot.user:
-            await ctx.reply("I didn't send that message!")
+            await ctx.reply("Я не отправлял это сообщение!")
             return
 
-        # Regular expression for emoji.
+        # Регулярное выражение для эмодзи.
         re_emoji = re.compile(
             "["
             "\U0001F1E0-\U0001F1FF"

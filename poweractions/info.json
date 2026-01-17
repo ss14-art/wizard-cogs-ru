@@ -1,9 +1,9 @@
 {
-    "author" : ["Space Wizards"],
-    "install_msg" : "Successfully installed the PowerActions cog! Setup documentation can be found [here](https://docs.spacestation14.com/en/server-hosting/setting-up-redbot.html#ss14watchdog-power-actions).",
-    "name" : "SS14.Watchdog Power Actions",
-    "short" : "Allows you to control your server ss14.watchdog.",
-    "description" : "Allows you to restart, stop and update servers easily with ss14.watchdog.",
-    "tags" : ["Space Station 14", "SS14", "Administration", "Watchdog"],
+    "author": ["Space Wizards"],
+    "install_msg": "Cog PowerActions успешно установлен! Инструкцию по настройке можно найти [здесь](https://docs.spacestation14.com/en/server-hosting/setting-up-redbot.html#ss14watchdog-power-actions).",
+    "name": "SS14.Watchdog Power Actions",
+    "short": "Позволяет управлять вашим сервером через ss14.watchdog.",
+    "description": "Позволяет легко перезапускать, останавливать и обновлять серверы с помощью ss14.watchdog.",
+    "tags": ["Space Station 14", "SS14", "Administration", "Watchdog"],
     "requirements": ["aiohttp"]
 }

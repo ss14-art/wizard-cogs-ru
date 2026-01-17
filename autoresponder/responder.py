@@ -27,7 +27,7 @@ class responder(commands.Cog):
         # Tetris
         match = re.search(r".*tetris.*", message.content, re.IGNORECASE)
         if match:
-            await channel.send("*Nanotrasen Block Game:tm:")
+            await channel.send("*Nanotrasen Block Game™")
 
         # WYCI
         match = re.search(r"\S\s+(?:when|whence)[\s*?.!)]*$", message.content, re.IGNORECASE)
@@ -35,7 +35,7 @@ class responder(commands.Cog):
             if random.random() > 0.005:
                 await channel.send("When You Code It.")
             else:
-                await channel.send("Never.")
+                await channel.send("Никогда.")
 
         # Based
 
@@ -44,8 +44,8 @@ class responder(commands.Cog):
 
         if match:
             if match.group(1).lower() == "based":
-                based = "Based on what?"
-                unbased = "Not Based."
+                based = "Основано на чём?"
+                unbased = "Не основано."
 
             if match.group(1).lower() == "gebaseerd":
                 based = "Gebaseerd op wat?"
@@ -83,3 +83,4 @@ class responder(commands.Cog):
                 await channel.send(based)
             else:
                 await channel.send(unbased)
+                

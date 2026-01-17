@@ -1,8 +1,8 @@
 {
-    "author" : ["Space Wizards"],
-    "install_msg" : "Thank you for our installing our repo! If you need support, You can ask in the #hosting channel on the official [SS14 discord](https://discord.ss14.io/). Documentation on our cogs can be found [here](https://docs.spacestation14.com/en/server-hosting/setting-up-redbot.html)",
-    "name" : "Space Wizards Cogs",
-    "short" : "Useful cogs for server operators of Space Station 14 game servers.",
-    "description" : "Useful cogs for server operators to use alongside their Space Station 14 servers. An open source project based on the cult classic Space Station 13.",
-    "tags" : ["Space Station 14", "SS14", "Space Wizards"]
+    "author": ["Space Wizards"],
+    "install_msg": "Спасибо за установку нашего репозитория! Если вам нужна помощь, вы можете задать вопрос в канале #hosting на официальном [Discord SS14](https://discord.ss14.io/). Документацию по нашим Cogs можно найти [здесь](https://docs.spacestation14.com/en/server-hosting/setting-up-redbot.html)",
+    "name": "Space Wizards Cogs",
+    "short": "Полезные Cogs для операторов игровых серверов Space Station 14.",
+    "description": "Полезные Cogs для операторов серверов, которые можно использовать вместе с их серверами Space Station 14. Открытый проект, основанный на культовой классике Space Station 13.",
+    "tags": ["Space Station 14", "SS14", "Space Wizards"]
 }

@@ -1,48 +1,55 @@
-# Useful RedBot Cogs for Space Station 14
+# Полезные Cogs для RedBot от Space Station 14
 
-This is a collection of RedBot Cogs for Space Station 14.
+Это коллекция Cogs (дополнений) для RedBot, предназначенных для использования с Space Station 14.
 
-[Documention](https://docs.spacestation14.com/en/server-hosting/setting-up-redbot.html)
+**[Документация](https://docs.spacestation14.com/en/server-hosting/setting-up-redbot.html)**
 
-## Installation
+> **ℹ️ О форке**
+> Это — русскоязычный форк оригинального репозитория.
+> *   **Оригинальный репозиторий:** [https://github.com/space-wizards/wizard-cogs](https://github.com/space-wizards/wizard-cogs)
+> *   **Этот форк:** [https://github.com/ss14-art/wizard-cogs-ru](https://github.com/ss14-art/wizard-cogs-ru)
+> Основная цель — перевод интерфейса и сообщений бота на русский язык.
 
-1. Get downloader if you don't already have it
+## Установка
 
-```[p]load downloader```
+1.  Установите загрузчик (`downloader`), если у вас его ещё нет:
+    ```
+    [p]load downloader
+    ```
+2.  Добавьте этот репозиторий:
+    ```
+    [p]repo add wizard-cogs-ru https://github.com/ss14-art/wizard-cogs-ru
+    ```
+3.  И установите нужный вам Cog:
+    ```
+    [p]cog install wizard-cogs-ru <имя_cog>
+    ```
 
-2. Add this repo
+Более подробная документация, включая инструкцию по настройке собственного бота, доступна в нашей [документации](https://docs.spacestation14.com/en/server-hosting/setting-up-redbot.html).
 
-```[p]repo add wizard-cogs https://github.com/space-wizards/wizard-cogs```
-
-3. and install the cog you want
-
-```[p]cog install wizard-cogs <cog_name>```
-
-More in-depth documentation along with how to set up your own bot can be found here in our [documentation](https://docs.spacestation14.com/en/server-hosting/setting-up-redbot.html)
-
-## Available Cogs
+## Доступные Cogs
 
 ### Echo
-Repeats what you say.
+Повторяет то, что вы скажете.
 <details>
-<img src="media/echo-example.png" alt="Echo Example"/>
+<img src="media/echo-example.png" alt="Пример работы Echo"/>
 </details>
 
 ### Game Server Status
-Allows you to set up a status for your SS14 and SS13 servers (and some other third party ones).
+Позволяет настроить отображение статуса ваших серверов SS14 и SS13 (а также некоторых сторонних).
 <details>
-<img src="media/SS14-game-status-example.png" alt="SS14 Status Example"/>
-<img src="media/SS13-game-status-example.png" alt="SS13 Status Example"/>
+<img src="media/SS14-game-status-example.png" alt="Пример статуса SS14"/>
+<img src="media/SS13-game-status-example.png" alt="Пример статуса SS13"/>
 </details>
 
 ### SS14.Watchdog Power Actions
-Allows you to power restart your SS14.Watchdog controlled servers.
+Позволяет перезапускать ваши серверы, управляемые через SS14.Watchdog.
 <details>
-<img src="media/poweractions-example.png" alt="Poweractions Example"/>
+<img src="media/poweractions-example.png" alt="Пример Power Actions"/>
 </details>
 
 ### Autoresponder
-Responds to "Based" "tetris" and "blabla when" with "Based on what" "*Nanotrasen Block Game™️" and "When you code it"
+Автоматически отвечает на фразы "Based", "tetris" и "blabla when" сообщениями "Based on what", "*Nanotrasen Block Game™️" и "When you code it".
 <details>
-<img src="media/autoresponder-example.png" alt="Autoresponder Example"/>
+<img src="media/autoresponder-example.png" alt="Пример работы Autoresponder"/>
 </details>

@@ -1,6 +1,6 @@
 """
-Unused parrts of the SS13 server status parser. Its very unlikely to be used and is here for archival purposes.
-In case someone ever wants to build it into its own thing again (Why? Just use Crossedfall's Cog)
+Неиспользуемые части парсера статуса сервера SS13. Крайне маловероятно, что они будут использованы, оставлены здесь для архивных целей.
+На случай, если кто-то захочет встроить это во что-то самостоятельное снова (Зачем? Просто используйте Cog от Crossedfall).
 """
 
 
@@ -30,7 +30,7 @@ async def do_status_ss13(
 
     try:
         if not isinstance(response, Dict):
-            raise NotImplementedError("Non-list returns are not accepted.")
+            raise NotImplementedError("Невозможно принять ответ не в виде словаря.")
 
         mapname = None
         if "map_name" in response:
@@ -41,15 +41,15 @@ async def do_status_ss13(
         players = response["players"][0]
 
     except:
-        log.exception("Got unsupported response")
-        raise StatusException("Server sent unsupported response.")
+        log.exception("Получен неподдерживаемый ответ")
+        raise StatusException("Сервер отправил неподдерживаемый ответ.")
 
-    embed.add_field(name="Players Online", value=players)
+    embed.add_field(name="Игроков онлайн", value=players)
     if mapname:
-        embed.add_field(name="Map", value=mapname)
+        embed.add_field(name="Карта", value=mapname)
 
     if station_time:
-        embed.add_field(name="Station Time", value=station_time)
+        embed.add_field(name="Время на станции", value=station_time)
 
 
 def get_ss13_status_addr(url: str) -> Tuple[str, int]:
@@ -60,7 +60,7 @@ def get_ss13_status_addr(url: str) -> Tuple[str, int]:
 
     port = parsed.port
     if not port:
-        raise ValueError("No port specified!")
+        raise ValueError("Порт не указан!")
 
     return (cast(str, parsed.hostname), cast(int, parsed.port))
 
@@ -110,7 +110,7 @@ async def get_status_ss13(address: str, port: int, channel: MChannel, admindata:
         out += "."
 
     await channel.send(out)
- """
+"""
 
 
 async def byond_server_topic(
@@ -119,7 +119,7 @@ async def byond_server_topic(
     if message[0] != 63:
         message = b"?" + message
 
-    # Send a packet to trick BYOND into doing a world.Topic() call.
+    # Отправляем пакет, чтобы заставить BYOND выполнить вызов world.Topic().
     # https://github.com/N3X15/ss13-watchdog/blob/master/Watchdog.py#L582
     packet = b"\x00\x83"
     packet += struct.pack(">H", len(message) + 6)
@@ -133,9 +133,9 @@ async def byond_server_topic(
     await writer.drain()
 
     if await reader.read(2) != b"\x00\x83":
-        raise IOError("BYOND server returned data invalid.")
+        raise IOError("BYOND сервер вернул неверные данные.")
 
-    # Read response
+    # Читаем ответ
     size = struct.unpack(">H", await reader.read(2))[0]
     response = await reader.read(size)
     # logger.info(response)
@@ -148,7 +148,7 @@ async def byond_server_topic(
     return ret
 
 
-# Turns the BYOND packet into either a string or a float.
+# Преобразует BYOND-пакет либо в строку, либо в число с плавающей точкой.
 def byond_decode_packet(packet: bytes) -> Union[float, str]:
     if packet[0] == 0x2A:
         return cast(float, struct.unpack(">f", packet[1:5])[0])
@@ -156,4 +156,5 @@ def byond_decode_packet(packet: bytes) -> Union[float, str]:
     elif packet[0] == 0x06:
         return packet[1:-1].decode("ascii")
 
-    raise NotImplementedError(f"Unknown BYOND data code: 0x{packet[0]:x}")
+    raise NotImplementedError(f"Неизвестный код данных BYOND: 0x{packet[0]:x}")
+    
